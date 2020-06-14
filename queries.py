@@ -79,7 +79,7 @@ CREATE_TABLES_QUERIES = [
 # Copy data query
 STAGING_TWITCH_COPY = """
 COPY staging_twitch_dataset
-FROM '{path}' DELIMITER '{delimiter}' CSV {header}
+FROM '{path}' DELIMITER '{delimiter}' CSV {header} QUOTE E'\\b'
 """
 
 # Insert data queries
