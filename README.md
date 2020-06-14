@@ -10,6 +10,7 @@ simulate a mock company *Twitchy* which would, if existed, be affiliated with
 their streams, together with enriched game information obtained from a the RAWG
 Video Games Database API.
 
+
 ## Data sources
 
 The data used in this project was provdided from the following sites, visited
@@ -22,6 +23,7 @@ at date *2020/06*:
 - [RAWG Video Games Database API](https://rawg.io/apidocs) which exposes HTTP
     endpoints which allow to search for games by name and obtain the game's
     details.
+
 
 ## Data Warehouse design
 
@@ -38,10 +40,33 @@ the timestamps and extracted time measures for the streams, to help filter when
 analyzing the streams; and finally **Games** which hold information about the
 streamed game, title, release and ratings.
 
+For this project, we choose to use a *PostgresSQL* DB due to its simplicity and
+easy implemention. If the project were to scale up, say the data was increased
+by 100x, we would need to use a more robust DB suited for this amounts of data,
+such as AWS's Redshift. This migration to a cloud based Infrastructure as a
+Service (IaaS) approach, would also deal with the case where more people
+needed to access our DW at the same time.
+
+Due to the simplicty of our ETL and setup, we do not feel the need for any type
+of process orchestration. However, if the data from Twitch streams arrived each
+day and needed to be loaded into the DW, we would need to setup an orchestration
+system such as Airflow, to schedule a daily DAG calling our ETL scripts.
+
+
+## Data quality checks
+
 To help ensure integrity between tables, we enforce Foreign Key constraints on
 the fact tables when referencing the Primary Keys of the dimensional tables.
-In addition, to ensure data quality we perform integrity checks when loading
-the data into our DW.
+
+
+In addition, we also ensure integrity within each table by loading only rows
+which have the main table fields NOT NULL and with the proper data type.
+
+Finally, we ensure resolution of insertion conflicts for the different tables,
+updating selected changing fields (*views* or *followers* in *streams* and
+*broadcasters*) and not updating existing data on non-changing fields (rows in
+*time* table).
+
 
 # ETL design
 
@@ -69,6 +94,7 @@ The only inconvenience of this approach is the overhead introduced by querying
 the API endpoints to get the game's information, which delays the whole loading
 operation.
 
+
 ## Project structure
 
 The project is divided in four parts:
@@ -80,11 +106,13 @@ The project is divided in four parts:
 - Configuration file **config.json**, user provided, with credentials and
     execution details to connect to DB.
 
-- Project related files, such as README Markdown file with project description
-    or .gitignore file with project's version control ignores.
+- Project related files, such as README Markdown file with project description,
+    .gitignore file with project's version control ignores and requirements.txt
+    file with Python environment needed packages.
 
 - Jupyter Notebook *Capstone Project Template.ipynb* with project summary and sample
     execution.
+
 
 ## Project execution
 
@@ -102,6 +130,9 @@ configuration file *config.JSON*:
     python etl.py
     ```
     to execute the ETL.
+
+> Note: the execution of the sample data could take great amount of time
+> (~20 min) due to the RAWG API endpoint requests for game data.
 
 ## Query examples
 
