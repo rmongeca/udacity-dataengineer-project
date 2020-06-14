@@ -1,0 +1,13 @@
+{
+    "postgres": {
+        "host": "127.0.0.1",
+        "database": "postgres",
+        "user": "student",
+        "password": "student"
+    },
+    "staging": {
+        "filepath": "data/twitch/2015-02",
+        "delimiter": "\t",
+        "header": false
+    }
+}
