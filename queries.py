@@ -157,7 +157,7 @@ FROM (
         ) nrow
     FROM staging_twitch_dataset
     WHERE stream_id IS NOT NULL
-        AND game_title IS NOT NULL
+        AND game_title IS NOT NULL AND game_title != '-1'
         AND broadcaster_id IS NOT NULL
         AND broadcaster_name IS NOT NULL
         AND stream_time IS NOT NULL
@@ -171,5 +171,5 @@ ON CONFLICT (stream_id) DO UPDATE SET
 # Select queries
 GAME_TITLE_SELECT = """
 SELECT DISTINCT game_title FROM staging_twitch_dataset
-WHERE game_title IS NOT NULL
+WHERE game_title IS NOT NULL AND game_title != '-1'
 """
