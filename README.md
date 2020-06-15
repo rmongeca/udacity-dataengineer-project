@@ -10,6 +10,12 @@ simulate a mock company *Twitchy* which would, if existed, be affiliated with
 their streams, together with enriched game information obtained from a the RAWG
 Video Games Database API.
 
+The company's aim is to detect which broadcasters and games are being streamed,
+and what is the volume of views and followers of those streams. This will allow
+to identify new broadcaster which can be contacted as partners or monitor the
+ones that already are. In the case of games, it can help drive marketing
+campaigns for certain games that are popular among streamers.
+
 
 ## Data sources
 
@@ -24,13 +30,25 @@ at date *2020/06*:
     endpoints which allow to search for games by name and obtain the game's
     details.
 
+These data sources are thought to simulate the normal workflow of the Twitch
+website, by providing each day a batch of streams done during the day, together
+with its views and video information.
+
+Furthermore, RAWG API would simulate a database kept by the company of the most
+common games, with their specific game information, which will be updated with
+newly released titles. The aim of this information is to provide more insight
+in the different trends of the streamers, discerning release dates, genres or
+publishers.
+
 
 ## Data Warehouse design
 
-Given that the focus of this DW would be to analyze streams, we design a star
-schema centered around a single fact table **Streams** which will hold the
-information of a single stream, the associated broadcaster, game, time, views
-and stream details.
+According to the goal of the company to discover the trendier broadcasters and
+games, the ones that have more followers and streams with the more views, we
+decide to build our data model around the streams.
+
+We design a star schema centered around a single fact table **Streams** which
+will hold the information of a single stream, views and video details.
 
 Around this fact table, we design three dimensional tables which represent
 entities in the fact table that can be repeated and combined independently.
@@ -39,6 +57,12 @@ perform the streams, their followers and partner status; **Time** that stores
 the timestamps and extracted time measures for the streams, to help filter when
 analyzing the streams; and finally **Games** which hold information about the
 streamed game, title, release and ratings.
+
+By aggregating the dimensions in the fact table with regards to different
+dimension tables, we can obtain the sum or average of views and followers
+measures by game or broadcaster in a given time period, obtaining the desired
+information. Examples of these queries can be found in the *Query examples*
+section.
 
 
 ## Data quality checks
@@ -58,7 +82,11 @@ updating selected changing fields (*views* or *followers* in *streams* and
 
 # ETL design
 
-For the ETL to load data into our DW, we proceed with an staging table approach:
+As previously mentioned, we suppose a use case of daily batch of stream data,
+coming in tab-separated plain text files, which is enriched through an endpoint
+driven API.
+
+We provide a process to load this data into a staging table to populate our DW:
 
 - We load the Twitch streams data into a staging table using COPY commands.
 
@@ -150,7 +178,7 @@ This section shows two simple query examples to exploit the data in our DW.
     LIMIT 10
     ```
 
-## Tool choice
+## Tools choice
 
 The decided tools for this project, together with the reason for the choice are
 the following:
