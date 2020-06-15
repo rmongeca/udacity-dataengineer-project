@@ -40,18 +40,6 @@ the timestamps and extracted time measures for the streams, to help filter when
 analyzing the streams; and finally **Games** which hold information about the
 streamed game, title, release and ratings.
 
-For this project, we choose to use a *PostgresSQL* DB due to its simplicity and
-easy implemention. If the project were to scale up, say the data was increased
-by 100x, we would need to use a more robust DB suited for this amounts of data,
-such as AWS's Redshift. This migration to a cloud based Infrastructure as a
-Service (IaaS) approach, would also deal with the case where more people
-needed to access our DW at the same time.
-
-Due to the simplicty of our ETL and setup, we do not feel the need for any type
-of process orchestration. However, if the data from Twitch streams arrived each
-day and needed to be loaded into the DW, we would need to setup an orchestration
-system such as Airflow, to schedule a daily DAG calling our ETL scripts.
-
 
 ## Data quality checks
 
@@ -161,3 +149,93 @@ This section shows two simple query examples to exploit the data in our DW.
     ORDER BY streams DESC
     LIMIT 10
     ```
+
+## Tool choice
+
+The decided tools for this project, together with the reason for the choice are
+the following:
+
+- *PostgreSQL* as the database engine to create and load data into. The decision
+    for this engine was due to its simplicity and ease of use, specially for a
+    quick demo with sample data. In addition, its similarity with Amazon
+    Redshift makes it easier to port from the local solution to a bigger, more
+    robust cloud-based solution.
+
+- *Python* as the programming language to automate the DW creation and ETL
+    procedures. The choice for this language was due to the simplicity for a
+    local solution together with the availability and ease of packages to
+    connect to PostgreSQL, wrangle data and IO operations. In addition, the
+    development of the procedures in Python may allow for faster migration to
+    orchestrated procedures through Airflow, together with quick integration
+    with AWS Infrastructure as Code (IaC) automation of future cloud-based
+    implementations.
+
+
+## Future scenarios
+
+This section describes the changes and developments needed to address the
+specified future scenarios.
+
+### Data increased 100x
+
+The project described acts as a Proof of Concept of the DW design to analyze
+videogame stream data. In our local solution, we load the data for a day
+2015-02-01 from 00:00 to 07:00 having over 1M streams. In a real case, we would
+have data for multiple days, easily increasing the amount over a facto 100x.
+
+Dealing with such amount of data would not change the main design or process for
+the DW, apart from needing a more robust, orchestrated process for the ETL such
+as a scalable cloud-based approach for example using AWS S3 storage together
+with a Redshift DW.
+
+However, a main change that would need to be addressed is the connection
+between the streamed videogame and the game's data from RAWG, as individual
+request to the search endpoint would not be viable. In this case, one approach
+could be to previously load a list of games from RAWG database, perhaps with
+and incremental approach loading each day/week the newly realsed games that
+are more prone to being played. Afterwards, we would need to find a way to match
+the games provided by the stream data with the already loaded games in the
+dimension table. One way would be to use Levenshtein distance or other fuzzy
+string matching methods or Machine Learning techniques to perform the entity
+matching between tables.
+
+### Periodical ETL executions
+
+In a real case scenario when we have continously increasing amounts of data,
+the need for periodical automatic ETL executions arises.
+
+In this case, it is a logical approach to use an orchestrator to schedule the
+ETL executions, for instance on a daily bases loading the data from the previous
+day. Moreover, the use of an orchestrator like Airflow will allow us to trigger
+alarms in case of failure, schedule retries, data quality checks or abort the
+pipelines without compromising the already stored data.
+
+When executing the incremental loading process we would need to load the new
+data separated from the already stored, coherent data. Once the loading
+process of the new data finishes, and the consistency and correctness of the
+new data is ensured, it will be loaded into the final tables. This will ensure
+the related analysis, queries and dashboards function correctly through the
+whole process even if there is a failure in the ETL, without having to use
+space for backups or copies of our DW.
+
+### Concurrent access to the DW
+
+In a real case DW, we would need to provide access to the data for different
+amounts of people. From a Data Science team of around ~20 to a whole department
+with +100 people, we would need to provide them with updated, consisten data.
+In order to do that, we can choose to approaches.
+
+The first approach would be to perpare analitical dashboards or
+materialized views extracted from the DW and updated every time the DW is.
+This ensures the data is ready for fast querying and use. Nevertheless,
+this approach limits the available information to the agreed upon views between
+data engineers and data scientist, and can make analysis slower.
+
+The second approach would be to provide direct access to the DW for querying.
+While this allows for flexible consumption of the DW data, the infrastructure
+of the DW would need to support it. Although this may be easier when dealing
+with auto-scalable cloud-based infrastructures, this may not be cost-effective.
+
+All in all, the main idea to keep in mind is that a DW is thought of as a place
+to store data for posterior analysis but not to query directly, being materialized
+views or specific data extracted to data marts the best option to expose the data.
